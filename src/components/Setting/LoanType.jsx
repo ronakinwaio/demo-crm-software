@@ -15,10 +15,6 @@ export default function LoanType() {
 
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    fetchLoanTypes();
-  }, []);
-
   const fetchLoanTypes = async () => {
     try {
       const response = await fetch("/api/loan-type");
@@ -26,12 +22,17 @@ export default function LoanType() {
       if (data.success) {
         setLoanTypes(data.data);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch loan types");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLoanTypes();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -123,18 +124,18 @@ export default function LoanType() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading...</div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-xl font-bold text-[#1c3430] mb-4">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-gray-100">
+            <h2 className="text-xl font-bold text-slate-900 mb-4 pb-3 border-b border-gray-100">
               {editingType ? "Edit Loan Type" : "Add New Loan Type"}
             </h2>
 
@@ -150,8 +151,10 @@ export default function LoanType() {
                   onChange={(e) =>
                     setFormData({ ...formData, type_name: e.target.value })
                   }
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black ${errors.type_name ? "border-red-500" : "border-gray-300"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
+                    errors.type_name ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="e.g. Home Loan, Personal Loan"
                 />
                 {errors.type_name && (
                   <p className="mt-1 text-sm text-red-600">{errors.type_name}</p>
@@ -162,13 +165,13 @@ export default function LoanType() {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold transition-colors"
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#dfc797] text-[#17312d] rounded-lg hover:bg-[#f0d9ae] font-semibold transition-colors"
+                  className="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all shadow-md shadow-blue-600/30"
                 >
                   {editingType ? "Update" : "Add"}
                 </button>
@@ -179,14 +182,14 @@ export default function LoanType() {
       )}
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-slate-50/50">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Loan Types</h2>
-          <p className="text-sm text-gray-500">Manage loan types</p>
+          <h2 className="text-lg font-bold text-slate-900">Loan Types</h2>
+          <p className="text-xs text-gray-500">Manage available loan categories</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-[#dfc797] text-[#17312d] rounded-lg hover:bg-[#f0d9ae] font-semibold transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all shadow-md shadow-blue-600/30"
         >
           Add New Type
         </button>
@@ -198,23 +201,23 @@ export default function LoanType() {
           {loanTypes.map((type, index) => (
             <div
               key={index}
-              className="bg-white rounded-lg p-3 border border-gray-200 hover:border-[#dfc797] shadow-sm hover:shadow-md transition-all duration-200"
+              className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-500 shadow-sm hover:shadow-md transition-all duration-200"
             >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-base font-semibold text-gray-900">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-base font-semibold text-slate-900">
                   {type.type_name}
                 </h3>
               </div>
-              <div className="flex justify-end space-x-1.5">
+              <div className="flex justify-end space-x-2">
                 <button
                   onClick={() => handleEdit(type)}
-                  className="px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-xs font-medium transition-colors"
+                  className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 text-xs font-semibold transition-colors"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(type.id)}
-                  className="px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 text-xs font-medium transition-colors"
+                  className="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-md hover:bg-red-100 text-xs font-semibold transition-colors"
                 >
                   Delete
                 </button>

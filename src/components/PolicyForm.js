@@ -6,10 +6,6 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
     const [loanTypes, setLoanTypes] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchLoanTypes();
-    }, []);
-
     const fetchLoanTypes = async () => {
         try {
             const response = await fetch("/api/loan-type");
@@ -24,16 +20,21 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
         }
     };
 
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchLoanTypes();
+    }, []);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit();
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6">
-                <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-xl font-bold text-[#1c3430]">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-slate-900">
                         {editingPolicy ? "Edit Policy" : "Add New Policy"}
                     </h2>
                     <button
@@ -54,7 +55,7 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
                                 required
                                 value={formData.bank_name}
                                 onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#dfc797] focus:ring-2 focus:ring-[#dfc797]/30"
+                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                                 placeholder="Enter bank name"
                             />
                         </label>
@@ -64,7 +65,7 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
                             <select
                                 value={formData.loan_type || ""}
                                 onChange={(e) => setFormData({ ...formData, loan_type: e.target.value })}
-                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#dfc797] focus:ring-2 focus:ring-[#dfc797]/30"
+                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                                 disabled={loading}
                             >
                                 <option value="">Select Loan Type</option>
@@ -82,7 +83,7 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
                                 type="url"
                                 value={formData.link}
                                 onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#dfc797] focus:ring-2 focus:ring-[#dfc797]/30"
+                                className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                                 placeholder="https://example.com"
                             />
                         </label>
@@ -94,7 +95,7 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
                             value={formData.note}
                             onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                             rows={4}
-                            className="mt-2 w-full rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#dfc797] focus:ring-2 focus:ring-[#dfc797]/30"
+                            className="mt-2 w-full rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                             placeholder="Add a short note about this policy"
                         />
                     </label>
@@ -109,7 +110,7 @@ export default function PolicyForm({ formData, setFormData, onSubmit, onCancel, 
                         </button>
                         <button
                             type="submit"
-                            className="px-5 py-2.5 bg-[#17312d] text-[#dfc797] rounded-full font-semibold hover:bg-[#142a26] transition-all"
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-all shadow-md shadow-blue-600/30"
                         >
                             {editingPolicy ? "Update Policy" : "Save Policy"}
                         </button>

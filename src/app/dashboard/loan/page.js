@@ -4,63 +4,31 @@ import { useState, useEffect } from "react";
 import React from "react";
 import { toast } from "react-toastify";
 import LoanForm from "../../../components/LoanForm";
-import TaskForm from "../../../components/TaskForm";
 import { formatDisplayText } from "../../../utils/formatText";
 
 export default function LoanPage() {
   const [loans, setLoans] = useState([]);
-  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [editingLoan, setEditingLoan] = useState(null);
-  const [editingTask, setEditingTask] = useState(null);
-  const [expandedLoan, setExpandedLoan] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const [formData, setFormData] = useState({
+    date: new Date().toISOString().split("T")[0],
     name: "",
     phone_no: "",
-    phone_no_2: "",
-    email_id: "",
-    loan_status: "",
     loan_type: "",
-    reference_name: "",
-    reference_phone: "",
-    stage: "ACTIVE",
-    bank_name: "",
-    loan_ac_no: "",
+    lander: "",
     loan_amount: "",
-    emi_date: "",
-    emi_amount: "",
-    notes: "",
+    charge: "",
   });
 
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    fetchLoans();
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch("/api/tasks");
-      const data = await response.json();
-      if (data.success) {
-        setTasks(data.data);
-      }
-    } catch (error) {
-      toast.error("Failed to fetch tasks");
-    }
-  };
-
   const fetchLoans = async () => {
     try {
-      const response = await fetch("/api/loans");
+      const response = await fetch("/api/loans", { cache: "no-store" });
       const data = await response.json();
       if (data.success) {
         setLoans(data.data);
@@ -72,83 +40,61 @@ export default function LoanPage() {
     }
   };
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchLoans();
+  }, []);
+
   const validateForm = () => {
     const newErrors = {};
 
-    // Phone validation (Indian format: +91 followed by 10 digits or 10 digits)
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
     const phoneRegex = /^(\+91)?[6-9]\d{9}$/;
     if (!phoneRegex.test(formData.phone_no)) {
-      newErrors.phone_no = "Please enter a valid Indian phone number (e.g., +919876543210 or 9876543210)";
+      newErrors.phone_no = "Please enter a valid 10-digit mobile number";
     }
 
-    // Phone 2 validation (optional but if provided must be valid)
-    if (formData.phone_no_2 && !phoneRegex.test(formData.phone_no_2)) {
-      newErrors.phone_no_2 = "Please enter a valid Indian phone number (e.g., +919876543210 or 9876543210)";
+    if (!formData.loan_type) {
+      newErrors.loan_type = "Loan type is required";
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email_id && !emailRegex.test(formData.email_id)) {
-      newErrors.email_id = "Please enter a valid email address";
-    }
-
-    // Reference Phone validation (Indian format: +91 followed by 10 digits or 10 digits)
-    if (formData.reference_phone && !phoneRegex.test(formData.reference_phone)) {
-      newErrors.reference_phone = "Please enter a valid Indian phone number (e.g., +919876543210 or 9876543210)";
+    if (!formData.loan_amount || parseFloat(formData.loan_amount) <= 0) {
+      newErrors.loan_amount = "Valid loan amount is required";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (selectedFiles) => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       return;
     }
 
     try {
-      const submitFormData = new FormData();
-
-      // Add all form fields
-      submitFormData.append('name', formData.name);
-      submitFormData.append('phone_no', formData.phone_no);
-      submitFormData.append('phone_no_2', formData.phone_no_2 || '');
-      submitFormData.append('email_id', formData.email_id);
-      submitFormData.append('loan_status', formData.loan_status);
-      submitFormData.append('loan_type', formData.loan_type);
-      submitFormData.append('reference_name', formData.reference_name);
-      submitFormData.append('reference_phone', formData.reference_phone);
-      submitFormData.append('stage', formData.stage);
-      submitFormData.append('bank_name', formData.bank_name);
-      submitFormData.append('loan_ac_no', formData.loan_ac_no);
-      submitFormData.append('loan_amount', formData.loan_amount);
-      submitFormData.append('emi_date', formData.emi_date);
-      submitFormData.append('emi_amount', formData.emi_amount);
-      submitFormData.append('notes', formData.notes);
-
-      // Add files if any
-      if (selectedFiles && selectedFiles.length > 0) {
-        selectedFiles.forEach(file => {
-          submitFormData.append('files', file);
-        });
-      }
-
-      const url = editingLoan
-        ? `/api/loans/${editingLoan.id}`
-        : "/api/loans";
-      const method = editingLoan ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        body: submitFormData,
+      const response = await fetch("/api/loans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: formData.date || new Date().toISOString().split("T")[0],
+          name: formData.name.trim(),
+          phone_no: formData.phone_no.trim(),
+          loan_type: formData.loan_type,
+          lander: (formData.lander || "").trim(),
+          loan_amount: formData.loan_amount,
+          charge: formData.charge || "0",
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(
-          editingLoan ? "Loan updated successfully!" : "Loan added successfully!"
-        );
+        toast.success("Loan added successfully!");
         resetForm();
         fetchLoans();
         setShowForm(false);
@@ -160,69 +106,17 @@ export default function LoanPage() {
     }
   };
 
-  const handleEdit = (loan) => {
-    setEditingLoan(loan);
-    setFormData({
-      name: loan.name,
-      phone_no: loan.phone_no,
-      phone_no_2: loan.phone_no_2 || "",
-      email_id: loan.email_id || "",
-      loan_status: loan.loan_status || "",
-      loan_type: loan.loan_type || "",
-      reference_name: loan.reference_name || "",
-      reference_phone: loan.reference_phone || "",
-      stage: loan.stage || "ACTIVE",
-      bank_name: loan.bank_name || "",
-      loan_ac_no: loan.loan_ac_no || "",
-      loan_amount: loan.loan_amount,
-      emi_date: loan.emi_date || "",
-      emi_amount: loan.emi_amount || "",
-      notes: loan.notes || "",
-    });
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this loan?")) return;
-
-    try {
-      const response = await fetch(`/api/loans/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success("Loan deleted successfully!");
-        fetchLoans();
-      } else {
-        toast.error(data.message || "Failed to delete loan");
-      }
-    } catch (error) {
-      toast.error("Network error");
-    }
-  };
-
   const resetForm = () => {
     setFormData({
+      date: new Date().toISOString().split("T")[0],
       name: "",
       phone_no: "",
-      phone_no_2: "",
-      email_id: "",
-      loan_status: "",
       loan_type: "",
-      reference_name: "",
-      reference_phone: "",
-      stage: "ACTIVE",
-      bank_name: "",
-      loan_ac_no: "",
+      lander: "",
       loan_amount: "",
-      emi_date: "",
-      emi_amount: "",
-      notes: "",
+      charge: "",
     });
     setErrors({});
-    setEditingLoan(null);
   };
 
   const handleCancel = () => {
@@ -230,17 +124,23 @@ export default function LoanPage() {
     setShowForm(false);
   };
 
+  const formatDate = (dateVal) => {
+    if (!dateVal) return "-";
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const filteredLoans = loans
     .filter((loan) => {
-      if (statusFilter === "ALL") return true;
-      const loanStage = String(loan.stage || "").trim().toUpperCase();
-      return loanStage === statusFilter;
-    })
-    .filter((loan) => {
       if (!startDate && !endDate) return true;
-      const dateValue = loan.created_at || loan.emi_date || loan.date || "";
+      const dateValue = loan.date || loan.created_at || "";
       if (!dateValue) return false;
-      const entryDate = dateValue.split('T')[0];
+      const entryDate = dateValue.split("T")[0];
       if (startDate && entryDate < startDate) return false;
       if (endDate && entryDate > endDate) return false;
       return true;
@@ -249,162 +149,20 @@ export default function LoanPage() {
       if (!searchQuery.trim()) return true;
       const query = searchQuery.toLowerCase().trim();
 
-      // Search in No. (number_series)
       if (loan.number_series && loan.number_series.toString().toLowerCase().includes(query)) return true;
-
-      // Search in Name
       if (loan.name && loan.name.toLowerCase().includes(query)) return true;
-
-      // Search in Phone Numbers (both phone_no and phone_no_2)
       if (loan.phone_no && loan.phone_no.toLowerCase().includes(query)) return true;
-      if (loan.phone_no_2 && loan.phone_no_2.toLowerCase().includes(query)) return true;
-
-      if (
-        loan.loan_status &&
-        loan.loan_status.toLowerCase().includes(query)
-      )
-        return true;
-      if (
-        loan.loan_type &&
-        loan.loan_type.toLowerCase().includes(query)
-      )
-        return true;
+      if (loan.loan_type && loan.loan_type.toLowerCase().includes(query)) return true;
+      if (loan.lander && loan.lander.toLowerCase().includes(query)) return true;
+      if (loan.bank_name && loan.bank_name.toLowerCase().includes(query)) return true;
 
       return false;
     });
 
-  const [taskFormData, setTaskFormData] = useState({
-    category: "LOAN",
-    title: "",
-    description: "",
-    due_date: "",
-    status: "PENDING",
-  });
-
-  const handleTaskSubmit = async () => {
-    try {
-      const url = editingTask ? `/api/tasks/${editingTask.id}` : "/api/tasks";
-      const method = editingTask ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...taskFormData, category: "LOAN" }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(
-          editingTask ? "Task updated successfully!" : "Task added successfully!"
-        );
-        resetTaskForm();
-        fetchTasks();
-        setShowTaskForm(false);
-      } else {
-        toast.error(data.message || "Operation failed");
-      }
-    } catch (error) {
-      toast.error("Network error");
-    }
-  };
-
-  const handleTaskEdit = (task) => {
-    setEditingTask(task);
-    setTaskFormData({
-      category: task.category,
-      title: task.title,
-      description: task.description || "",
-      due_date: task.due_date || "",
-      status: task.status,
-    });
-    setShowTaskForm(true);
-  };
-
-  const handleTaskDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
-
-    try {
-      const response = await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success("Task deleted successfully!");
-        fetchTasks();
-      } else {
-        toast.error(data.message || "Failed to delete task");
-      }
-    } catch (error) {
-      toast.error("Network error");
-    }
-  };
-
-  const toggleTaskStatus = async (task) => {
-    const newStatus = task.status === "PENDING" ? "COMPLETED" : "PENDING";
-    try {
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...task, status: newStatus }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(`Task marked as ${newStatus.toLowerCase()}`);
-        fetchTasks();
-      }
-    } catch (error) {
-      toast.error("Failed to update task status");
-    }
-  };
-
-  const resetTaskForm = () => {
-    setTaskFormData({
-      category: "LOAN",
-      title: "",
-      description: "",
-      due_date: "",
-      status: "PENDING",
-    });
-    setEditingTask(null);
-  };
-
-  const handleTaskCancel = () => {
-    resetTaskForm();
-    setShowTaskForm(false);
-  };
-
-  const getDueDateColor = (dueDate, status) => {
-    if (!dueDate) return "text-gray-500";
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
-
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return "text-red-600 font-bold";
-    if (diffDays <= 5) return "text-yellow-600 font-bold";
-    return "text-green-600 font-bold";
-  };
-
-  const toggleLoanDetails = (loanId) => {
-    setExpandedLoan(expandedLoan === loanId ? null : loanId);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading...</div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -412,99 +170,62 @@ export default function LoanPage() {
   return (
     <div className="">
       <div className="sm:flex block justify-between items-center mb-6">
-        {/* Status Filter */}
-        <div className="flex flex-wrap gap-4 items-center">
-          {/* Loan Filters */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="loan-status-filter" className="text-sm font-semibold text-gray-700">
-              Filter
-            </label>
-            <select
-              id="loan-status-filter"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm focus:border-[#dfc797] focus:outline-none"
-            >
-              <option value="ALL">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="APPROVAL">Approval</option>
-              <option value="DISBURSED">Disbursed</option>
-              <option value="REJECT">Reject</option>
-            </select>
-          </div>
-
-          {/* Task Filters */}
-          {/* <div className="flex gap-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200 shadow-sm">
-            <button
-              onClick={() => setStatusFilter("TASK")}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${statusFilter === "TASK"
-                ? "bg-white text-[#17312d] shadow-sm border border-gray-200"
-                : "text-gray-600 hover:bg-gray-200"
-                }`}
-            >
-              Pending Task
-            </button>
-            <button
-              onClick={() => setStatusFilter("COMPLETED_TASK")}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${statusFilter === "COMPLETED_TASK"
-                ? "bg-white text-[#17312d] shadow-sm border border-gray-200"
-                : "text-gray-600 hover:bg-gray-200"
-                }`}
-            >
-              Complete Task
-            </button>
-          </div> */}
-        </div>
-        {/* Date Filters */}
-        <div className="flex items-center gap-2">
-          <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+        {/* Date and Search Filters */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 flex-wrap">
             {/* Search Input */}
             <div className="flex flex-col">
               <input
                 type="text"
-                placeholder="Search by No., Name, or Phone..."
+                placeholder="Search by No., Name, Phone, Lander..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 h-8 w-72 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#dfc797]"
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 h-9 w-72 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
             <div className="flex flex-col">
-              {/* <label className="text-[10px] uppercase text-gray-500 mb-1">Start Date</label> */}
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="rounded-md border border-gray-300 bg-white px-2 py-0 h-8 w-36 text-sm text-gray-700"
+                className="rounded-lg border border-gray-300 bg-white px-2 py-0 h-9 w-36 text-sm text-gray-700"
               />
             </div>
 
             <div className="flex flex-col">
-              {/* <label className="text-[10px] uppercase text-gray-500 mb-1">End Date</label> */}
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="rounded-md border border-gray-300 bg-white px-2 py-0 h-8 w-36 text-sm text-gray-700"
+                className="rounded-lg border border-gray-300 bg-white px-2 py-0 h-9 w-36 text-sm text-gray-700"
               />
             </div>
 
             <div className="flex items-end">
               <button
                 type="button"
-                onClick={() => { setStartDate(""); setEndDate(""); setSearchQuery(""); }}
-                className="ml-1 px-3 py-1 rounded-md bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 text-xs font-semibold"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  setSearchQuery("");
+                }}
+                className="ml-1 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 text-xs font-semibold transition-colors"
               >
                 Reset
               </button>
             </div>
           </div>
         </div>
+
         <button
-          onClick={() => statusFilter === "TASK" || statusFilter === "COMPLETED_TASK" ? setShowTaskForm(true) : setShowForm(true)}
-          className="px-4 py-2 sm:mt-0 mt-5 bg-[#dfc797] text-[#17312d] rounded-lg hover:bg-[#f0d9ae] font-semibold transition-colors"
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
+          className="px-5 py-2.5 sm:mt-0 mt-5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all shadow-md shadow-blue-600/30 hover:scale-[1.02]"
         >
-          {statusFilter === "TASK" || statusFilter === "COMPLETED_TASK" ? "Add New Task" : "Add New Loan"}
+          Add New Loan
         </button>
       </div>
 
@@ -516,336 +237,89 @@ export default function LoanPage() {
           errors={errors}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          editingLoan={editingLoan}
-        />
-      )}
-
-      {showTaskForm && (
-        <TaskForm
-          formData={taskFormData}
-          setFormData={setTaskFormData}
-          onSubmit={handleTaskSubmit}
-          onCancel={handleTaskCancel}
-          editingTask={editingTask}
+          editingLoan={null}
         />
       )}
 
       {/* Loans Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              {statusFilter === "TASK" || statusFilter === "COMPLETED_TASK" ? (
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Series Number</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                </tr>
-              ) : (
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    No.
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Phone Numbers
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Loan Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Loan Type
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Loan Amount
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Bank Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              )}
+            <thead className="bg-slate-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  No.
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Mobile
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Loan Type
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Lander
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Charge
+                </th>
+              </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {statusFilter === "TASK" || statusFilter === "COMPLETED_TASK" ? (
-                tasks.filter(t => t.category === "LOAN" && (statusFilter === "TASK" ? t.status !== "COMPLETED" : t.status === "COMPLETED")).length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                      No {statusFilter === "TASK" ? "pending" : "completed"} loan tasks found.
-                    </td>
-                  </tr>
-                ) : (
-                  tasks.filter(t => t.category === "LOAN" && (statusFilter === "TASK" ? t.status !== "COMPLETED" : t.status === "COMPLETED")).map((task, index) => {
-                    const rowBgClass = index % 2 === 0 ? 'bg-gray-100' : 'bg-white hover:bg-gray-50';
-                    return (
-                      <React.Fragment key={task.id}>
-                        <tr className={`transition-colors ${rowBgClass} ${task.description ? 'border-b-0' : ''}`}>
-                          <td className={`px-4 py-3 text-sm font-bold text-gray-900 ${task.status === "COMPLETED" ? "line-through text-gray-400" : ""}`}>
-                            {task.title}
-                          </td>
-                          <td className={`px-4 py-3 text-sm ${getDueDateColor(task.due_date, task.status)}`}>
-                            {task.due_date ? new Date(task.due_date).toLocaleDateString("en-IN") : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <span className={`px-2 py-1 text-[10px] font-bold rounded-full ${task.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                              {task.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); toggleTaskStatus(task); }}
-                                className={`px-3 py-1 text-xs font-semibold rounded transition-colors ${task.status === "COMPLETED" ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
-                              >
-                                {task.status === "COMPLETED" ? "Pending" : "Done"}
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleTaskEdit(task); }}
-                                className="px-3 py-1 text-xs bg-[#dfc797] text-[#17312d] rounded hover:bg-[#f0d9ae] font-medium transition-colors"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleTaskDelete(task.id); }}
-                                className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 font-medium transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        {task.description && (
-                          <tr className={`transition-colors ${rowBgClass}`}>
-                            <td colSpan="4" className="px-4 pb-3 pt-0 text-sm">
-                              <span className="font-bold text-gray-900">Note: </span>
-                              <span className="font-semibold text-gray-800 whitespace-pre-wrap">{task.description}</span>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                )
+            <tbody className="divide-y divide-gray-100">
+              {filteredLoans.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                    No loans found. Click &quot;Add New Loan&quot; to get started.
+                  </td>
+                </tr>
               ) : (
-                filteredLoans.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="9"
-                      className="px-4 py-8 text-center text-gray-500"
-                    >
-                      No loans found for the selected filters. Click "Add New Loan" to get started.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLoans
-                    .map((loan, index) => {
-                      const rowBgClass = index % 2 === 0 ? 'bg-gray-100' : 'bg-white hover:bg-gray-50';
-                      return (
-                        <React.Fragment key={loan.id}>
-                          <tr
-                            className={`cursor-pointer transition-colors ${rowBgClass} ${loan.notes && expandedLoan !== loan.id ? 'border-b-0' : ''}`}
-                            onClick={() => toggleLoanDetails(loan.id)}
-                          >
-                            <td className="px-4 py-3 text-sm font-medium text-[#1c3430]">
-                              {loan.number_series}
-                            </td>
-                            <td className="px-4 py-3 text-sm font-bold text-gray-700">
-                              {formatDisplayText(loan.name, "-")}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              <div className="flex flex-col gap-1">
-                                <a
-                                  href={`tel:${loan.phone_no}`}
-                                  className="text-[#17312d] hover:text-[#dfc797] hover:underline font-medium"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {loan.phone_no}
-                                </a>
-                                {loan.phone_no_2 && (
-                                  <a
-                                    href={`tel:${loan.phone_no_2}`}
-                                    className="text-[#17312d] hover:text-[#dfc797] hover:underline font-medium"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    {loan.phone_no_2}
-                                  </a>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                {loan.loan_status || "-"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-xs text-gray-700">
-                              {loan.loan_type || "-"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              ₹{parseFloat(loan.loan_amount).toLocaleString()}
-                            </td>
-                            <td
-                              className="px-4 py-3 text-sm text-gray-700 max-w-[180px] truncate"
-                              title={formatDisplayText(loan.bank_name, "-")}
-                            >
-                              {formatDisplayText(loan.bank_name, "-")}
-                            </td>
-                            <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEdit(loan);
-                                  }}
-                                  className="px-3 py-1 text-xs bg-[#dfc797] text-[#17312d] rounded hover:bg-[#f0d9ae] font-medium transition-colors"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(loan.id);
-                                  }}
-                                  className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 font-medium transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          {loan.notes && (
-                            <tr
-                              className={`cursor-pointer transition-colors ${rowBgClass}`}
-                              onClick={() => toggleLoanDetails(loan.id)}
-                            >
-                              <td colSpan="7" className="px-4 pb-3 pt-0 text-xs">
-                                <span className="font-bold text-gray-900">Note: </span>
-                                <span className="font-semibold text-gray-800">{formatDisplayText(loan.notes, "-")}</span>
-                              </td>
-                            </tr>
-                          )}
-                          {expandedLoan === loan.id && (
-                            <tr className="animate-in slide-in-from-top-1 duration-300">
-                              <td colSpan="9" className="px-0 py-0">
-                                <div className="bg-gray-50 border-l-4 border-[#dfc797] p-6 shadow-inner transform transition-all duration-300 ease-in-out overflow-hidden">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {/* Personal Information */}
-                                    <div className="animate-in slide-in-from-top-2 duration-500 delay-100">
-                                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Personal Information</h4>
-                                      <div className="space-y-2">
-                                        <div>
-                                          <p className="text-xs text-gray-500">Name</p>
-                                          <p className="font-medium text-gray-900">{formatDisplayText(loan.name, "-")}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Primary Phone</p>
-                                          <a
-                                            href={`tel:${loan.phone_no}`}
-                                            className="font-medium text-[#17312d] hover:text-[#dfc797] hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            {loan.phone_no}
-                                          </a>
-                                        </div>
-                                        {loan.phone_no_2 && (
-                                          <div>
-                                            <p className="text-xs text-gray-500">Secondary Phone</p>
-                                            <a
-                                              href={`tel:${loan.phone_no_2}`}
-                                              className="font-medium text-[#17312d] hover:text-[#dfc797] hover:underline"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                              {loan.phone_no_2}
-                                            </a>
-                                          </div>
-                                        )}
-                                        <div>
-                                          <p className="text-xs text-gray-500">Email</p>
-                                          <p className="font-medium text-gray-900">{loan.email_id || "-"}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Created Date</p>
-                                          <p className="font-medium text-gray-900">
-                                            {loan.created_at ? new Date(loan.created_at).toLocaleDateString('en-IN', {
-                                              day: '2-digit',
-                                              month: '2-digit',
-                                              year: 'numeric'
-                                            }) : "-"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
+                filteredLoans.map((loan, index) => {
+                  const rowBgClass = index % 2 === 0 ? "bg-slate-50/50" : "bg-white hover:bg-blue-50/40";
+                  const landerName = loan.lander || loan.bank_name || "-";
+                  const chargeVal = parseFloat(loan.charge || 0);
 
-                                    {/* Loan Information */}
-                                    <div className="animate-in fade-in-50 duration-500 delay-200">
-                                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Loan Information</h4>
-                                      <div className="space-y-2">
-                                        <div>
-                                          <p className="text-xs text-gray-500">Bank Name</p>
-                                          <p className="font-medium text-gray-900">{formatDisplayText(loan.bank_name, "-")}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Loan Account</p>
-                                          <p className="font-medium text-gray-900">{loan.loan_ac_no || "-"}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Loan Amount</p>
-                                          <p className="font-medium text-gray-900">₹{parseFloat(loan.loan_amount).toLocaleString('en-IN')}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">EMI Amount</p>
-                                          <p className="font-medium text-gray-900">₹{parseFloat(loan.emi_amount || 0).toLocaleString('en-IN')}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">EMI Date</p>
-                                          <p className="font-medium text-gray-900">
-                                            {loan.emi_date ? new Date(loan.emi_date).toLocaleDateString('en-IN', {
-                                              day: '2-digit',
-                                              month: '2-digit',
-                                              year: 'numeric'
-                                            }) : "-"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Reference Information */}
-                                    <div className="animate-in fade-in-50 duration-500 delay-300">
-                                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Reference Information</h4>
-                                      <div className="space-y-2">
-                                        <div>
-                                          <p className="text-xs text-gray-500">Reference Name</p>
-                                          <p className="font-medium text-gray-900">{formatDisplayText(loan.reference_name, "-")}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Reference Phone</p>
-                                          <p className="font-medium text-gray-900">{loan.reference_phone || "-"}</p>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Loan Status</p>
-                                          <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                            {loan.loan_status || "-"}
-                                          </span>
-                                        </div>
-                                        <div>
-                                          <p className="text-xs text-gray-500">Loan Type</p>
-                                          <p className="font-medium text-gray-900">{loan.loan_type || "-"}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })
-                )
+                  return (
+                    <tr key={loan.id} className={`transition-colors ${rowBgClass}`}>
+                      <td className="px-4 py-3 text-sm font-bold text-blue-950">
+                        {loan.number_series || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {formatDate(loan.date || loan.created_at)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-bold text-gray-900">
+                        {formatDisplayText(loan.name, "-")}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        <a
+                          href={`tel:${loan.phone_no}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                        >
+                          {loan.phone_no || "-"}
+                        </a>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {loan.loan_type || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {formatDisplayText(landerName, "-")}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-bold text-slate-900">
+                        ₹{parseFloat(loan.loan_amount || 0).toLocaleString("en-IN")}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-bold text-emerald-700">
+                        {chargeVal > 0 ? `₹${chargeVal.toLocaleString("en-IN")}` : "₹0"}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -854,4 +328,3 @@ export default function LoanPage() {
     </div>
   );
 }
-

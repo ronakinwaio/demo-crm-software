@@ -12,7 +12,7 @@ export async function POST(request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { success: false, error: 'Email and password are required', message: 'Email and password are required' },
         { status: 400 }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(request) {
 
     if (querySnapshot.empty) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { success: false, error: 'Invalid credentials', message: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -37,7 +37,7 @@ export async function POST(request) {
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { success: false, error: 'Invalid credentials', message: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -54,6 +54,7 @@ export async function POST(request) {
 
     // Set HTTP-only cookie
     const response = NextResponse.json({
+      success: true,
       message: 'Login successful',
       user: {
         id: user.id || userDoc.id,

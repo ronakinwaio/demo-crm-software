@@ -19,8 +19,8 @@ export default function AccountForm({
     onSubmit();
   };
 
-  const statusOptions = ['PAYMENT', 'RECEIPT', 'COMPLETE'];
-  const paymentTypeOptions = ['CASH', 'ONLINE'];
+  const statusOptions = ["COMPLETE", "RECEIPT", "PAYMENT"];
+  const paymentTypeOptions = ["CASH", "ONLINE"];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,6 +29,7 @@ export default function AccountForm({
 
   useEffect(() => {
     if (formData.number_series) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSeriesNumber(formData.number_series);
     }
   }, [formData.number_series]);
@@ -45,14 +46,12 @@ export default function AccountForm({
       const data = await response.json();
 
       if (data.success) {
-        setFormData({
-          ...formData,
+        setFormData((prev) => ({
+          ...prev,
           number_series: seriesNumber.trim().toUpperCase(),
-          name: data.data.name || "",
-          phone_no: data.data.phone_no || "",
-          reference_name: data.data.reference_name || "",
-          reference_phone: data.data.reference_phone || "",
-        });
+          name: data.data.name || prev.name,
+          phone_no: data.data.phone_no || prev.phone_no,
+        }));
         toast.success("Details auto-filled from series number!");
       } else {
         toast.error(data.message || "Series number not found");
@@ -65,10 +64,10 @@ export default function AccountForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
-          <h2 className="text-xl font-bold text-[#1c3430]">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-100">
+        <div className="flex justify-between items-center mb-5 flex-wrap gap-4 pb-3 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-slate-900">
             {editingAccount ? "Edit Account Record" : "Add New Account Record"}
           </h2>
 
@@ -76,16 +75,16 @@ export default function AccountForm({
             <div className="flex gap-2 items-center">
               <input
                 type="text"
-                placeholder="Series No (e.g. L-01)"
+                placeholder="Series No (e.g. L-1)"
                 value={seriesNumber}
                 onChange={(e) => setSeriesNumber(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-sm text-black"
+                className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-black uppercase"
               />
               <button
                 type="button"
                 onClick={handleSeriesSearch}
                 disabled={searching}
-                className="px-3 py-1.5 bg-[#dfc797] text-[#17312d] rounded-lg hover:bg-[#f0d9ae] font-semibold text-sm transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm transition-colors disabled:opacity-50"
               >
                 {searching ? "Searching..." : "Search"}
               </button>
@@ -95,70 +94,22 @@ export default function AccountForm({
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Series Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name *
+                Series No
               </label>
               <input
                 type="text"
-                required
-                value={formData.name}
+                name="number_series"
+                value={formData.number_series || ""}
                 onChange={handleChange}
-                name="name"
-                disabled
-                className={`w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed text-black ${errors.name ? 'border-red-500' : 'border-gray-300'
-                  }`}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone No *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.phone_no}
-                onChange={handleChange}
-                name="phone_no"
-                disabled
-                className={`w-full px-3 py-2 border rounded-lg bg-gray-100 cursor-not-allowed text-black ${errors.phone_no ? 'border-red-500' : 'border-gray-300'
-                  }`}
-              />
-              {errors.phone_no && <p className="text-red-500 text-xs mt-1">{errors.phone_no}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reference Name
-              </label>
-              <input
-                type="text"
-                value={formData.reference_name}
-                onChange={handleChange}
-                name="reference_name"
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-black"
+                placeholder="e.g. L-1"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reference Phone
-              </label>
-              <input
-                type="text"
-                value={formData.reference_phone}
-                onChange={handleChange}
-                name="reference_phone"
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-black"
-              />
-            </div>
-
-
-
+            {/* Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date *
@@ -166,85 +117,126 @@ export default function AccountForm({
               <input
                 type="date"
                 required
-                value={formData.date_time}
+                value={formData.date_time ? formData.date_time.split("T")[0] : ""}
                 onChange={handleChange}
                 name="date_time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               />
+              {errors?.date_time && <p className="text-red-500 text-xs mt-1">{errors.date_time}</p>}
             </div>
 
+            {/* Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Due Date
+                Name *
               </label>
               <input
-                type="date"
-                value={formData.due_date || ""}
+                type="text"
+                required
+                value={formData.name || ""}
                 onChange={handleChange}
-                name="due_date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
+                name="name"
+                placeholder="Enter client name"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
+                  errors?.name ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors?.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
 
+            {/* Phone No */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Type *
+                Phone No *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.phone_no || ""}
+                onChange={handleChange}
+                name="phone_no"
+                placeholder="Enter phone number"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
+                  errors?.phone_no ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors?.phone_no && <p className="text-red-500 text-xs mt-1">{errors.phone_no}</p>}
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status *
               </label>
               <select
                 required
-                value={formData.payment_type}
+                value={formData.status || "COMPLETE"}
                 onChange={handleChange}
-                name="payment_type"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
+                name="status"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               >
-                <option value="">Select payment type</option>
-                {paymentTypeOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
                 ))}
               </select>
             </div>
 
+            {/* Payment Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Complete Amount
+                Payment Type
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.complete_amount}
+              <select
+                value={formData.payment_type || "CASH"}
                 onChange={handleChange}
-                name="complete_amount"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
-              />
+                name="payment_type"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+              >
+                {paymentTypeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Paid Amount
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.pending_amount}
-                onChange={handleChange}
-                name="pending_amount"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
-              />
-            </div>
-
+            {/* Amount */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Payment Note
+                Amount *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={formData.complete_amount || ""}
+                onChange={handleChange}
+                name="complete_amount"
+                placeholder="Enter amount"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black ${
+                  errors?.complete_amount ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors?.complete_amount && (
+                <p className="text-red-500 text-xs mt-1">{errors.complete_amount}</p>
+              )}
+            </div>
+
+            {/* Note */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Note
               </label>
               <textarea
-                value={formData.note}
+                value={formData.note || ""}
                 onChange={handleChange}
                 name="note"
                 rows="2"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#dfc797] focus:border-transparent text-black"
-                placeholder="Enter note for the initial payment"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                placeholder="Enter note or details"
               ></textarea>
             </div>
           </div>
@@ -252,14 +244,14 @@ export default function AccountForm({
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-[#dfc797] text-[#17312d] py-2 px-4 rounded-lg hover:bg-[#f0d9ae] font-semibold transition-colors"
+              className="flex-1 bg-blue-600 text-white py-2.5 px-4 rounded-xl hover:bg-blue-700 font-semibold transition-all shadow-md shadow-blue-600/30"
             >
               {editingAccount ? "Update Account" : "Add Account"}
             </button>
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 font-semibold transition-colors"
+              className="flex-1 bg-gray-100 text-gray-700 py-2.5 px-4 rounded-xl hover:bg-gray-200 font-semibold transition-colors"
             >
               Cancel
             </button>

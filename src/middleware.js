@@ -4,26 +4,20 @@ export function middleware(request) {
   const token = request.cookies.get("auth-token")?.value;
   const { pathname } = request.nextUrl;
 
-  // Public Routes
-  const publicRoutes = ["/"];
+  // Auth/Public Entry Routes
+  const isAuthRoute = pathname === "/" || pathname === "/admin";
 
   // Protected Routes
-  const protectedRoutes = ["/dashboard"];
-
-  // Check Route Types
-  const isPublicRoute = publicRoutes.includes(pathname);
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = pathname.startsWith("/dashboard");
 
   // If token exists and user tries to access login page
-  if (token && isPublicRoute) {
+  if (token && isAuthRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // If no token and user tries to access protected page
   if (!token && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();
@@ -33,11 +27,12 @@ export const config = {
   matcher: [
     /*
      * Ignore:
+     * - api routes
      * - _next/static
      * - _next/image
      * - favicon.ico
      * - images/files
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };

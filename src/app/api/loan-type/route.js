@@ -1,13 +1,41 @@
 import { db } from '../../../lib/firebase';
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
 
-// GET all Loan Types
+export const dynamic = 'force-dynamic';
+
+// In-memory cache for loan types
+let cachedLoanTypes = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const invalidateCache = () => {
+  cachedLoanTypes = null;
+  lastCacheTime = 0;
+};
+
+// GET all Loan Types (served from fast memory cache when valid)
 export async function GET() {
   try {
+    const now = Date.now();
+    if (cachedLoanTypes && (now - lastCacheTime < CACHE_TTL_MS)) {
+      return NextResponse.json({ success: true, data: cachedLoanTypes });
+    }
+
     const snapshot = await getDocs(collection(db, 'loan_type'));
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return NextResponse.json({ success: true, data });
+    const data = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+
+    cachedLoanTypes = data;
+    lastCacheTime = now;
+
+    return NextResponse.json(
+      { success: true, data },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        }
+      }
+    );
   } catch (error) {
     console.error('Error fetching loan types:', error);
     return NextResponse.json(
@@ -26,6 +54,8 @@ export async function POST(request) {
     const newRef = doc(collection(db, 'loan_type'));
     const newData = { type_name, created_at: new Date().toISOString() };
     await setDoc(newRef, newData);
+
+    invalidateCache();
 
     return NextResponse.json({ success: true, data: { id: newRef.id, ...newData } });
   } catch (error) {
@@ -49,7 +79,9 @@ export async function PUT(request) {
 
     const recordRef = doc(db, 'loan_type', id);
     await updateDoc(recordRef, { type_name, updated_at: new Date().toISOString() });
-    
+
+    invalidateCache();
+
     return NextResponse.json({ success: true, data: { id, type_name } });
   } catch (error) {
     console.error('Error updating loan type:', error);
@@ -69,6 +101,8 @@ export async function DELETE(request) {
     if (!id) return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 });
 
     await deleteDoc(doc(db, 'loan_type', id));
+
+    invalidateCache();
 
     return NextResponse.json({ success: true, message: 'Loan type deleted successfully' });
   } catch (error) {

@@ -1,6 +1,8 @@
 import { db } from '../../../lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
@@ -16,7 +18,6 @@ export async function GET(request) {
 
     let collectionName = '';
 
-    // Determine collection based on prefix
     if (series.startsWith('L-')) {
       collectionName = 'loans';
     } else if (series.startsWith('G-')) {
@@ -30,19 +31,22 @@ export async function GET(request) {
       );
     }
 
-    const q = query(collection(db, collectionName), where('number_series', '==', series));
+    // Limit to 1 document for instantaneous search
+    const q = query(
+      collection(db, collectionName),
+      where('number_series', '==', series),
+      limit(1)
+    );
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
       const data = snapshot.docs[0].data();
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         data: {
           name: data.name || '',
           phone_no: data.phone_no || '',
-          reference_name: data.reference_name || '',
-          reference_phone: data.reference_phone || ''
-        } 
+        }
       });
     } else {
       return NextResponse.json(

@@ -20,28 +20,6 @@ export default function PolicyPage() {
         pin: false,
     });
 
-    useEffect(() => {
-        fetchPolicies();
-        fetchLoanTypes();
-    }, []);
-
-    const truncateNote = (note, maxLength = 30) => {
-        if (!note) return "-";
-        if (note.length <= maxLength) return note;
-        return note.substring(0, maxLength) + "...";
-    };
-
-    const copyNote = async (note) => {
-        if (!note) return;
-
-        try {
-            await navigator.clipboard.writeText(note);
-            toast.success("Note copied successfully!");
-        } catch (error) {
-            toast.error("Failed to copy note");
-        }
-    };
-
     const fetchLoanTypes = async () => {
         try {
             const response = await fetch("/api/loan-type");
@@ -56,7 +34,7 @@ export default function PolicyPage() {
 
     const fetchPolicies = async () => {
         try {
-            const response = await fetch("/api/policies");
+            const response = await fetch("/api/policies", { cache: "no-store" });
             const data = await response.json();
             if (data.success) {
                 setPolicies(data.data);
@@ -69,6 +47,13 @@ export default function PolicyPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchPolicies();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchLoanTypes();
+    }, []);
 
     const handleSubmit = async () => {
         try {
@@ -178,7 +163,7 @@ export default function PolicyPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="text-gray-600">Loading policies...</div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
             </div>
         );
     }
@@ -187,14 +172,14 @@ export default function PolicyPage() {
         <div className="p-4 sm:p-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Policy Management</h1>
-                    <p className="text-sm text-gray-500 mt-1">Add, edit, and remove bank policies with link and note details.</p>
+                    <h1 className="text-2xl font-bold text-slate-900">Policy Management</h1>
+                    <p className="text-xs text-gray-500 mt-1">Add, edit, and manage bank loan policies and links.</p>
                 </div>
                 <div className="flex gap-3 items-center flex-wrap">
                     <select
                         value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value)}
-                        className="px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 outline-none focus:border-[#dfc797] focus:ring-2 focus:ring-[#dfc797]/30"
+                        className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     >
                         <option value="ALL">All Loan Types</option>
                         {loanTypes.map((type) => (
@@ -208,7 +193,7 @@ export default function PolicyPage() {
                             resetForm();
                             setShowForm(true);
                         }}
-                        className="px-5 py-2.5 bg-[#dfc797] text-[#17312d] rounded-lg hover:bg-[#f0d9ae] font-semibold shadow-sm transition-all"
+                        className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-md shadow-blue-600/30 transition-all hover:scale-[1.02]"
                     >
                         + Add Policy
                     </button>
@@ -225,29 +210,29 @@ export default function PolicyPage() {
                 />
             )}
 
-            <div className="bg-white rounded-3xl shadow-sm overflow-auto border border-gray-100">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
                 <table className="min-w-full table-auto">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-slate-50 border-b border-gray-200">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bank Name</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Loan Type</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Link</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Note</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider"></th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Bank Name</th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Loan Type</th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Link</th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Note</th>
+                            <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-100">
                         {sortedPolicies.filter(p => typeFilter === "ALL" || p.loan_type === typeFilter).length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="px-4 py-10 text-center text-gray-500">
-                                    No policies found. Click "Add Policy" to create one.
+                                <td colSpan="6" className="px-4 py-10 text-center text-gray-500">
+                                    No policies found. Click &quot;Add Policy&quot; to create one.
                                 </td>
                             </tr>
                         ) : (
                             sortedPolicies.filter(p => typeFilter === "ALL" || p.loan_type === typeFilter).map((policy, index) => (
-                                <tr key={policy.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                                    <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                                <tr key={policy.id} className={index % 2 === 0 ? 'bg-slate-50/50' : 'bg-white hover:bg-blue-50/40 transition-colors'}>
+                                    <td className="px-4 py-3.5 text-sm font-medium text-gray-900">
                                         <button
                                             type="button"
                                             onClick={(e) => {
@@ -260,22 +245,22 @@ export default function PolicyPage() {
                                             {policy.pin ? "📌" : "📍"}
                                         </button>
                                     </td>
-                                    <td className="px-4 py-4 text-sm font-bold text-gray-900">
+                                    <td className="px-4 py-3.5 text-sm font-bold text-gray-900">
                                         {formatDisplayText(policy.bank_name, '-')}
                                     </td>
-                                    <td className="px-4 py-4 text-sm">
-                                        <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    <td className="px-4 py-3.5 text-sm">
+                                        <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                                             {policy.loan_type || '-'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-4 text-sm text-[#17312d] max-w-[200px] truncate">
+                                    <td className="px-4 py-3.5 text-sm max-w-[200px] truncate">
                                         {policy.link ? (
                                             <a
                                                 href={policy.link}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 title={policy.link}
-                                                className="hover:underline inline-block text-blue-600 truncate"
+                                                className="hover:underline inline-block text-blue-600 font-medium truncate"
                                             >
                                                 {truncateLink(policy.link)}
                                             </a>
@@ -283,7 +268,7 @@ export default function PolicyPage() {
                                             '-'
                                         )}
                                     </td>
-                                    <td className="px-4 py-4 text-sm text-gray-700">
+                                    <td className="px-4 py-3.5 text-sm text-gray-700">
                                         {policy.note ? (
                                             <span
                                                 onClick={() => copyNote(policy.note)}
@@ -296,17 +281,17 @@ export default function PolicyPage() {
                                             "-"
                                         )}
                                     </td>
-                                    <td className="px-4 py-4 text-sm text-gray-700">
+                                    <td className="px-4 py-3.5 text-sm text-gray-700">
                                         <div className="flex flex-wrap gap-2">
                                             <button
                                                 onClick={() => handleEdit(policy)}
-                                                className="px-3 py-1 text-xs bg-[#dfc797] text-[#17312d] rounded-full hover:bg-[#f0d9ae] transition-all"
+                                                className="px-3 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 font-semibold transition-all"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(policy.id)}
-                                                className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full hover:bg-red-200 transition-all"
+                                                className="px-3 py-1 text-xs bg-red-50 text-red-700 border border-red-200 rounded-md hover:bg-red-100 font-semibold transition-all"
                                             >
                                                 Delete
                                             </button>

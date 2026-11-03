@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Ramkrishna Consultancy",
-  description: "Complete consultancy management system with GST filing, loan management, income tax tracking, and client analytics",
+  title: "Kartik Rathod",
+  description: "Complete consultancy and financial management system by Kartik Rathod",
   icons: {
     icon: "/sprint.png",
   },

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -27,24 +26,21 @@ export default function Sidebar({
 
       if (data.success) {
         toast.success("Logged out successfully!");
-        window.location.href = "/";
+        window.location.href = "/admin";
       } else {
         toast.error(data.message || "Logout failed. Please try again.");
       }
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Network error during logout.");
-      window.location.href = "/";
+      window.location.href = "/admin";
     }
   };
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: "📊" },
     { name: "Loan", href: "/dashboard/loan", icon: "💸" },
-    { name: "GST", href: "/dashboard/gst", icon: "📋" },
-    { name: "Income TAX", href: "/dashboard/income-tax", icon: "🧾" },
     { name: "Account", href: "/dashboard/account", icon: "👤" },
-    { name: "Tasks", href: "/dashboard/tasks", icon: "📅" },
     { name: "Daily Hisab", href: "/dashboard/daily-hisab", icon: "📈" },
     { name: "Policy", href: "/dashboard/policy", icon: "🛡️" },
     { name: "Settings", href: "/dashboard/settings", icon: "⚙️" },
@@ -64,9 +60,9 @@ export default function Sidebar({
       <aside
         className={`
     fixed top-0 left-0 z-50 h-screen
-    ${isCollapsed ? "w-20" : "w-48"}
-    bg-[#17312d]
-    border-r border-[#29433f]
+    ${isCollapsed ? "w-20" : "w-52"}
+    bg-[#0b192c]
+    border-r border-[#1e2e4a]
     transform transition-all duration-300 ease-in-out
     flex flex-col
     shadow-2xl
@@ -80,26 +76,30 @@ export default function Sidebar({
           className={`
             relative flex items-center
             ${isCollapsed ? "justify-center h-20" : "justify-center h-28"}
-            border-b border-[#29433f]
+            border-b border-[#1e2e4a]
             px-4
-            bg-[#1b3934]
+            bg-[#071324]
           `}
         >
-          {/* Logo */}
-          <div
-            className={`
-              relative flex items-center justify-center overflow-hidden
-              ${isCollapsed ? "w-12 h-12" : "w-full h-24"}
-            `}
-          >
-            <Image
-              src="/Ramkrishna.png"
-              alt="Ramkrishna Consultancy"
-              fill
-              priority
-              className="object-contain"
-              sizes="(max-width: 768px) 120px, 220px"
-            />
+          {/* Logo / Brand */}
+          <div className="relative flex items-center justify-center">
+            {isCollapsed ? (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-sky-500 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-blue-900/50 ring-2 ring-blue-400/30">
+                KR
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-700 to-sky-500 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-blue-900/50 mb-1.5 ring-2 ring-blue-400/30">
+                  KR
+                </div>
+                <span className="font-extrabold text-white text-[15px] tracking-wide whitespace-nowrap">
+                  Kartik Rathod
+                </span>
+                <span className="text-[10px] text-sky-400 font-semibold uppercase tracking-wider">
+                  Consultancy
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Desktop Toggle */}
@@ -109,19 +109,19 @@ export default function Sidebar({
               hidden lg:flex
               absolute -right-4 top-1/2 -translate-y-1/2
               w-8 h-8
-              bg-[#dfc797]
+              bg-blue-600
               rounded-full
               items-center justify-center
-              text-[#17312d]
-              shadow-lg
+              text-white
+              shadow-lg shadow-blue-900/50
+              hover:bg-blue-500
               hover:scale-110
               transition-all
               z-50
             "
           >
             <svg
-              className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""
-                }`}
+              className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? "rotate-180" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -158,7 +158,7 @@ export default function Sidebar({
 
         {/* Menu */}
         <nav className={`flex-1 px-3 py-5 custom-scrollbar ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden'}`}>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -168,23 +168,23 @@ export default function Sidebar({
                   href={item.href}
                   onClick={onClose}
                   className={`
-    group relative flex items-center
-    ${isCollapsed ? "justify-center" : ""}
-    h-14 rounded-2xl
-    transition-all duration-300
-    px-2
-    overflow-visible
-    ${isActive
-                      ? "bg-[#dfc797] text-[#17312d] shadow-lg"
-                      : "text-[#dfc797] hover:bg-[#244640] hover:text-white"
+                    group relative flex items-center
+                    ${isCollapsed ? "justify-center" : ""}
+                    h-12 rounded-xl
+                    transition-all duration-200
+                    px-3
+                    overflow-visible
+                    ${isActive
+                      ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/30"
+                      : "text-slate-300 hover:bg-[#162740] hover:text-white"
                     }
-  `}
+                  `}
                 >
                   <span
                     className={`
-                      text-2xl
-                      ${isCollapsed ? "" : "mr-4"}
-                      transition-transform duration-300
+                      text-xl
+                      ${isCollapsed ? "" : "mr-3"}
+                      transition-transform duration-200
                       group-hover:scale-110
                     `}
                   >
@@ -192,7 +192,7 @@ export default function Sidebar({
                   </span>
 
                   {!isCollapsed && (
-                    <span className="font-medium text-[15px] whitespace-nowrap">
+                    <span className="font-semibold text-[14px] whitespace-nowrap">
                       {item.name}
                     </span>
                   )}
@@ -201,25 +201,24 @@ export default function Sidebar({
                   {isCollapsed && (
                     <div
                       className="
-      absolute left-[85px] top-1/2 -translate-y-1/2
-      px-3 py-2
-      bg-[#dfc797]
-      text-[#17312d]
-      text-sm font-semibold
-      rounded-lg
-      opacity-0 invisible
-      group-hover:opacity-100
-      group-hover:visible
-      transition-all duration-300
-      whitespace-nowrap
-      shadow-2xl
-      z-[99999]
-      pointer-events-none
-    "
+                        absolute left-[80px] top-1/2 -translate-y-1/2
+                        px-3 py-1.5
+                        bg-blue-600
+                        text-white
+                        text-xs font-semibold
+                        rounded-lg
+                        opacity-0 invisible
+                        group-hover:opacity-100
+                        group-hover:visible
+                        transition-all duration-200
+                        whitespace-nowrap
+                        shadow-2xl
+                        z-[99999]
+                        pointer-events-none
+                      "
                     >
                       {item.name}
-
-                      <div className="absolute top-1/2 -left-1 w-2 h-2 bg-[#dfc797] rotate-45 -translate-y-1/2" />
+                      <div className="absolute top-1/2 -left-1 w-2 h-2 bg-blue-600 rotate-45 -translate-y-1/2" />
                     </div>
                   )}
                 </Link>
@@ -229,24 +228,25 @@ export default function Sidebar({
         </nav>
 
         {/* Logout */}
-        <div className="p-3 border-t border-[#29433f] bg-[#17312d]">
+        <div className="p-3 border-t border-[#1e2e4a] bg-[#071324]">
           <button
             onClick={handleLogout}
             className={`
               group relative flex items-center
               ${isCollapsed ? "justify-center" : ""}
-              w-full h-14 px-4
-              rounded-2xl
-              bg-[#dfc797]
-              text-[#17312d]
+              w-full h-12 px-3
+              rounded-xl
+              bg-gradient-to-r from-blue-600 to-blue-700
+              text-white
               font-semibold
-              hover:bg-[#f0d9ae]
-              transition-all duration-300
+              hover:from-blue-500 hover:to-blue-600
+              shadow-md shadow-blue-900/30
+              transition-all duration-200
               active:scale-95
             `}
           >
             <svg
-              className={`w-5 h-5 ${isCollapsed ? "" : "mr-3"}`}
+              className={`w-5 h-5 ${isCollapsed ? "" : "mr-2.5"}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -259,30 +259,30 @@ export default function Sidebar({
               />
             </svg>
 
-            {!isCollapsed && <span>Logout</span>}
+            {!isCollapsed && <span className="text-sm">Logout</span>}
 
             {/* Tooltip */}
             {isCollapsed && (
               <div
                 className="
-      absolute left-[85px] top-1/2 -translate-y-1/2
-      px-3 py-2
-      bg-[#dfc797]
-      text-[#17312d]
-      text-sm font-semibold
-      rounded-lg
-      opacity-0 invisible
-      group-hover:opacity-100
-      group-hover:visible
-      transition-all duration-300
-      whitespace-nowrap
-      shadow-2xl
-      z-[99999]
-      pointer-events-none
-    "
+                  absolute left-[80px] top-1/2 -translate-y-1/2
+                  px-3 py-1.5
+                  bg-blue-600
+                  text-white
+                  text-xs font-semibold
+                  rounded-lg
+                  opacity-0 invisible
+                  group-hover:opacity-100
+                  group-hover:visible
+                  transition-all duration-200
+                  whitespace-nowrap
+                  shadow-2xl
+                  z-[99999]
+                  pointer-events-none
+                "
               >
                 Logout
-                <div className="absolute top-1/2 -left-1 w-2 h-2 bg-[#dfc797] rotate-45 -translate-y-1/2" />
+                <div className="absolute top-1/2 -left-1 w-2 h-2 bg-blue-600 rotate-45 -translate-y-1/2" />
               </div>
             )}
           </button>

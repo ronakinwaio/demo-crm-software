@@ -1,15 +1,14 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-export default function LoginPage() {
+export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
@@ -20,38 +19,33 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
+      const response = await fetch("/api/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.message) {
-        toast.success('Login successful!');
-        // SPA Routing without full page reload
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+      if (response.ok && (data.success || data.message === "Login successful")) {
+        toast.success("Login successful!");
+        window.location.href = "/dashboard";
       } else {
-        setError(data.error || 'Login failed');
-        toast.error(data.error || 'Login failed');
+        toast.error(data.error || data.message || "Invalid credentials");
       }
     } catch (error) {
-      setError('Network error. Please try again.');
-      toast.error('Network error. Please try again.');
+      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -62,50 +56,47 @@ export default function LoginPage() {
     setChangePasswordLoading(true);
 
     try {
-      const response = await fetch('/api/change-password', {
-        method: 'POST',
+      const response = await fetch("/api/change-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, oldPassword, newPassword }),
+        body: JSON.stringify({ oldPassword, newPassword }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('Password changed successfully!');
+      if (data.success) {
+        toast.success("Password changed successfully!");
         setShowChangePassword(false);
-        setOldPassword('');
-        setNewPassword('');
+        setOldPassword("");
+        setNewPassword("");
       } else {
-        toast.error(data.error || 'Password change failed');
+        toast.error(data.message || "Failed to change password");
       }
     } catch (error) {
-      toast.error('Network error. Please try again.');
+      toast.error("Network error. Please try again.");
     } finally {
       setChangePasswordLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-[#eeeee9]">
-      {/* Left Side - Image */}
+    <div className="min-h-screen flex bg-slate-50">
+      {/* Left Side - Dark Blue Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1c3430] to-[#0f1f1c]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#071324] via-[#0b192c] to-[#162740]">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="rounded-full bg-white p-8 h-[300px] w-[300px] flex items-center justify-center shadow-2xl transition-transform hover:scale-105 duration-500">
-                <Image
-                  src="/Ramkrishna.png"
-                  alt="Ramkrushn Consultancy Logo"
-                  width={300}
-                  height={300}
-                  className="object-contain"
-                  priority
-                />
+            <div className="text-center px-8">
+              <div className="rounded-3xl bg-blue-600/20 border border-blue-400/30 p-8 h-[240px] w-[240px] mx-auto flex flex-col items-center justify-center shadow-2xl backdrop-blur-md transition-transform hover:scale-105 duration-500">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-700 to-sky-400 flex items-center justify-center text-white font-black text-3xl shadow-xl shadow-blue-900/50 mb-3 ring-4 ring-blue-300/30">
+                  KR
+                </div>
+                <h3 className="text-xl font-black text-white tracking-wide">Kartik Rathod</h3>
+                <p className="text-xs text-sky-300 font-semibold uppercase tracking-widest mt-0.5">Consultancy</p>
               </div>
-              <h2 className="mt-10 text-3xl font-bold text-[#dfc797] tracking-wide">Admin Portal</h2>
-              <p className="mt-3 text-gray-300">Secure access to management dashboard</p>
+              <h2 className="mt-8 text-3xl font-extrabold text-white tracking-wide">Admin Portal</h2>
+              <p className="mt-2 text-slate-300 text-sm">Secure access to management dashboard</p>
             </div>
           </div>
         </div>
@@ -118,7 +109,7 @@ export default function LoginPage() {
           {/* Back to Home Button */}
           <button
             onClick={() => router.push('/')}
-            className="absolute -top-16 left-0 flex items-center text-[#4b4c49] hover:text-[#1c3430] transition-colors"
+            className="absolute -top-16 left-0 flex items-center text-slate-500 hover:text-blue-600 transition-colors font-medium text-sm"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -127,14 +118,14 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-[#1c3430] mb-2">Welcome Back</h1>
-            <p className="text-[#4b4c49]">Sign in to your account</p>
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Welcome Back</h1>
+            <p className="text-slate-500 text-sm">Sign in to your administration account</p>
           </div>
 
           {!showChangePassword && (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#4b4c49] mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Email Address
                 </label>
                 <input
@@ -142,14 +133,14 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-[#dfc797] rounded-lg focus:ring-2 focus:ring-[#1c3430] focus:border-transparent bg-white text-[#4b4c49] placeholder-[#4b4c49] placeholder-opacity-50 transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-800 placeholder-gray-400 transition-all outline-none"
                   placeholder="Enter your email"
                   required
                   suppressHydrationWarning={true}
                 />
               </div>
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-[#4b4c49] mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -158,7 +149,7 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-[#dfc797] rounded-lg focus:ring-2 focus:ring-[#1c3430] focus:border-transparent bg-white text-[#4b4c49] placeholder-[#4b4c49] placeholder-opacity-50 transition-all"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-800 placeholder-gray-400 transition-all outline-none"
                     placeholder="Enter your password"
                     required
                     suppressHydrationWarning={true}
@@ -167,7 +158,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4b4c49] hover:text-[#1c3430] focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -184,17 +175,17 @@ export default function LoginPage() {
                   <input
                     id="remember"
                     type="checkbox"
-                    className="w-4 h-4 text-[#1c3430] border-[#dfc797] rounded focus:ring-[#1c3430]"
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     suppressHydrationWarning={true}
                   />
-                  <label htmlFor="remember" className="ml-2 text-sm text-[#4b4c49]">
+                  <label htmlFor="remember" className="ml-2 text-sm text-slate-600">
                     Remember me
                   </label>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowChangePassword(!showChangePassword)}
-                  className="text-sm cursor-pointer text-[#1c3430] hover:underline"
+                  className="text-sm font-semibold cursor-pointer text-blue-600 hover:text-blue-700 hover:underline"
                   suppressHydrationWarning={true}
                 >
                   Forgot password?
@@ -205,7 +196,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#1c3430] text-[#dfc797] py-3 px-4 rounded-lg hover:bg-[#0f1f1c] hover:shadow-lg transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Signing In...' : 'Sign In'}
                 </button>
@@ -214,16 +205,16 @@ export default function LoginPage() {
           )}
 
           {showChangePassword && (
-            <form onSubmit={handleChangePassword} className="mt-6 space-y-4 p-6 bg-white rounded-xl border border-[#dfc797] shadow-sm">
+            <form onSubmit={handleChangePassword} className="mt-6 space-y-4 p-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-[#1c3430]">Change Password</h3>
-                <button type="button" onClick={() => setShowChangePassword(false)} className="text-[#4b4c49] hover:text-[#1c3430]">
+                <h3 className="text-xl font-bold text-slate-900">Change Password</h3>
+                <button type="button" onClick={() => setShowChangePassword(false)} className="text-gray-400 hover:text-slate-600">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>
 
               <div>
-                <label htmlFor="oldPassword" className="block text-sm font-medium text-[#4b4c49] mb-2">
+                <label htmlFor="oldPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
                   Old Password
                 </label>
                 <div className="relative">
@@ -232,7 +223,7 @@ export default function LoginPage() {
                     type={showOldPassword ? "text" : "password"}
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-[#dfc797] rounded-lg focus:ring-2 focus:ring-[#1c3430] focus:border-transparent bg-white text-[#4b4c49] placeholder-[#4b4c49] placeholder-opacity-50"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-800 placeholder-gray-400"
                     placeholder="Enter old password"
                     required
                     suppressHydrationWarning={true}
@@ -241,7 +232,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowOldPassword(!showOldPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4b4c49] hover:text-[#1c3430] focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showOldPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -253,7 +244,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-[#4b4c49] mb-2">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
                   New Password
                 </label>
                 <div className="relative">
@@ -262,7 +253,7 @@ export default function LoginPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-[#dfc797] rounded-lg focus:ring-2 focus:ring-[#1c3430] focus:border-transparent bg-white text-[#4b4c49] placeholder-[#4b4c49] placeholder-opacity-50"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-slate-800 placeholder-gray-400"
                     placeholder="Enter new password"
                     required
                     suppressHydrationWarning={true}
@@ -271,7 +262,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4b4c49] hover:text-[#1c3430] focus:outline-none"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showNewPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
@@ -286,7 +277,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={changePasswordLoading}
-                  className="w-full bg-[#1c3430] text-[#dfc797] py-3 px-4 rounded-lg hover:bg-[#0f1f1c] hover:shadow-lg transition-all duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {changePasswordLoading ? 'Changing...' : 'Change Password'}
                 </button>
@@ -294,9 +285,9 @@ export default function LoginPage() {
             </form>
           )}
 
-          <div className="mt-8 text-center border-t border-[#dfc797] border-opacity-30 pt-6">
-            <p className="text-sm text-[#4b4c49]">
-              © {new Date().getFullYear()} Ramkrushn Consultancy. All rights reserved.
+          <div className="mt-8 text-center border-t border-gray-200 pt-6">
+            <p className="text-sm text-slate-500">
+              © {new Date().getFullYear()} Kartik Rathod. All rights reserved.
             </p>
           </div>
         </div>
